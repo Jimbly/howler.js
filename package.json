@@ -1,6 +1,6 @@
 {
   "name": "@jimbly/howler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "GLOV.js fork of Howler.js",
   "keywords": [
     "howler",
@@ -31,14 +31,10 @@
   "devDependencies": {
     "uglify-js": "2.x"
   },
-  "main": "dist/howler.js",
+  "main": "src/howler.core.js",
   "license": "MIT",
   "files": [
     "src",
-    "dist/howler.js",
-    "dist/howler.min.js",
-    "dist/howler.core.min.js",
-    "dist/howler.spatial.min.js",
     "LICENSE.md"
   ],
   "directories": {
