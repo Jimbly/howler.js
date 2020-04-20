@@ -8,6 +8,7 @@
  *  Modified by Jimb Esser, Dashing Strike LLC:
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
+ *    Fix audio not resuming upon keypress
  *
  *  MIT License
  */
@@ -394,6 +395,7 @@
           document.removeEventListener('touchstart', unlock, true);
           document.removeEventListener('touchend', unlock, true);
           document.removeEventListener('click', unlock, true);
+          document.removeEventListener('keydown', unlock, true);
 
           // Let all sounds know that audio has been unlocked.
           for (var i=0; i<self._howls.length; i++) {
@@ -406,6 +408,7 @@
       document.addEventListener('touchstart', unlock, true);
       document.addEventListener('touchend', unlock, true);
       document.addEventListener('click', unlock, true);
+      document.addEventListener('keydown', unlock, true);
 
       return self;
     },
