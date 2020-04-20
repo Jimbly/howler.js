@@ -5,6 +5,10 @@
  *  (c) 2013-2020, James Simpson of GoldFire Studios
  *  goldfirestudios.com
  *
+ *  Modified by Jimb Esser, Dashing Strike LLC:
+ *    Fix inconsistent return of self.
+ *    Do not throw uncaught promise rejections at startup
+ *
  *  MIT License
  */
 
@@ -303,7 +307,7 @@
 
       // Only run this if Web Audio is supported and it hasn't already been unlocked.
       if (self._audioUnlocked || !self.ctx) {
-        return;
+        return self;
       }
 
       self._audioUnlocked = false;
@@ -427,13 +431,14 @@
         return self._html5AudioPool.pop();
       }
 
-      //.Check if the audio is locked and throw a warning.
-      var testPlay = new Audio().play();
-      if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
-        testPlay.catch(function() {
-          console.warn('HTML5 Audio pool exhausted, returning potentially locked audio object.');
-        });
-      }
+      // JE: Disabling this, it causes un-ignorable Uncaught Promise Rejection errors in Chrome.
+      // //.Check if the audio is locked and throw a warning.
+      // var testPlay = new Audio().play();
+      // if (testPlay && typeof Promise !== 'undefined' && (testPlay instanceof Promise || typeof testPlay.then === 'function')) {
+      //   testPlay.catch(function() {
+      //     console.warn('HTML5 Audio pool exhausted, returning potentially locked audio object.');
+      //   });
+      // }
 
       return new Audio();
     },
@@ -462,7 +467,7 @@
       var self = this;
 
       if (!self.autoSuspend || !self.ctx || typeof self.ctx.suspend === 'undefined' || !Howler.usingWebAudio) {
-        return;
+        return self;
       }
 
       // Check if any sounds are playing.
@@ -515,7 +520,7 @@
       var self = this;
 
       if (!self.ctx || typeof self.ctx.resume === 'undefined' || !Howler.usingWebAudio) {
-        return;
+        return self;
       }
 
       if (self.state === 'running' && self.ctx.state !== 'interrupted' && self._suspendTimer) {
@@ -660,7 +665,7 @@
       // If no audio is available, quit immediately.
       if (Howler.noAudio) {
         self._emit('loaderror', null, 'No audio support.');
-        return;
+        return self;
       }
 
       // Make sure our source is in an array.
@@ -708,7 +713,7 @@
 
       if (!url) {
         self._emit('loaderror', null, 'No codec support for selected audio sources.');
-        return;
+        return self;
       }
 
       self._src = url;
@@ -846,7 +851,7 @@
       // End the sound instantly if seek is at the end.
       if (seek >= stop) {
         self._ended(sound);
-        return;
+        return null;
       }
 
       // Begin the actual playback.
@@ -2480,7 +2485,7 @@
     } else {
       Howler.ctx.decodeAudioData(arraybuffer, success, error);
     }
-  }
+  };
 
   /**
    * Sound is now loaded, so finish setting everything up and fire the loaded event.
@@ -2584,4 +2589,4 @@
     window.Howl = Howl;
     window.Sound = Sound;
   }
-})();
+}());
