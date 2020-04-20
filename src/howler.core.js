@@ -8,6 +8,7 @@
  *  Modified by Jimb Esser, Dashing Strike LLC:
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
+ *    Fix pre-loading entire audio file when streaming is desired
  *
  *  MIT License
  */
@@ -2276,7 +2277,8 @@
 
         // Setup the new audio node.
         self._node.src = parent._src;
-        self._node.preload = parent._preload === true ? 'auto' : parent._preload;
+        // JE: If _html5 was requested, then we want this audio streamed, not buffered!
+        self._node.preload = parent._html5 ? 'metadata' : parent._preload === true ? 'auto' : parent._preload;
         self._node.volume = volume * Howler.volume();
 
         // Begin loading the source.
