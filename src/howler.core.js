@@ -213,6 +213,9 @@
 
       // Keeps track of the suspend/resume state of the AudioContext.
       self.state = self.ctx ? self.ctx.state || 'suspended' : 'suspended';
+      if  (self.state === 'running') {
+        self.safeToPlay = true;
+      }
 
       // Automatically begin the 30-second suspend process
       self._autoSuspend();
@@ -313,7 +316,6 @@
       // }
 
       self._audioUnlocked = false;
-      self.safeToPlay = false;
       self.autoUnlock = false;
 
       if (self.ctx) {
