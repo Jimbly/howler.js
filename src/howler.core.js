@@ -9,6 +9,8 @@
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
  *    Fix audio not resuming upon keypress
+ *    Fix audio not resuming upon mousedown
+ *    Fix pre-loading entire audio file when streaming is desired
  *
  *  MIT License
  */
@@ -395,6 +397,7 @@
           document.removeEventListener('touchstart', unlock, true);
           document.removeEventListener('touchend', unlock, true);
           document.removeEventListener('click', unlock, true);
+          document.removeEventListener('mousedown', unlock, true);
           document.removeEventListener('keydown', unlock, true);
 
           // Let all sounds know that audio has been unlocked.
@@ -408,6 +411,7 @@
       document.addEventListener('touchstart', unlock, true);
       document.addEventListener('touchend', unlock, true);
       document.addEventListener('click', unlock, true);
+      document.addEventListener('mousedown', unlock, true);
       document.addEventListener('keydown', unlock, true);
 
       return self;
@@ -2238,7 +2242,8 @@
 
         // Setup the new audio node.
         self._node.src = parent._src;
-        self._node.preload = 'auto';
+        // JE: If _html5 was requested, then we want this audio streamed, not buffered!
+        self._node.preload = parent._html5 ? 'metadata' : 'auto';
         self._node.volume = volume * Howler.volume();
 
         // Begin loading the source.
