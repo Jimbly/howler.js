@@ -5,11 +5,12 @@
  *  (c) 2013-2020, James Simpson of GoldFire Studios
  *  goldfirestudios.com
  *
- *  Modified by Jimb Esser, Dashing Strike LLC:
+ *  Modified by Jimb Esser:
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
  *    Fix audio not resuming upon mousedown
  *    Fix pre-loading entire audio file when streaming is desired
+ *    Unlock audio even if WebAudio is disabled
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *
  *  MIT License
@@ -313,24 +314,27 @@
       var self = this || Howler;
 
       // Only run this if Web Audio is supported and it hasn't already been unlocked.
-      if (self._audioUnlocked || !self.ctx) {
-        return self;
-      }
+      // JE: Unlock even if not using WebAudio; Also, _audioUnlocked is never true here, and would be false while unlocking anyway
+      // if (self._audioUnlocked || !self.ctx) {
+      //   return self;
+      // }
 
       self._audioUnlocked = false;
       self.autoUnlock = false;
 
-      // Some mobile devices/platforms have distortion issues when opening/closing tabs and/or web views.
-      // Bugs in the browser (especially Mobile Safari) can cause the sampleRate to change from 44100 to 48000.
-      // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
-      if (!self._mobileUnloaded && self.ctx.sampleRate !== 44100) {
-        self._mobileUnloaded = true;
-        self.unload();
-      }
+      if (self.ctx) {
+        // Some mobile devices/platforms have distortion issues when opening/closing tabs and/or web views.
+        // Bugs in the browser (especially Mobile Safari) can cause the sampleRate to change from 44100 to 48000.
+        // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
+        if (!self._mobileUnloaded && self.ctx.sampleRate !== 44100) {
+          self._mobileUnloaded = true;
+          self.unload();
+        }
 
-      // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
-      // http://stackoverflow.com/questions/24119684
-      self._scratchBuffer = self.ctx.createBuffer(1, 1, 22050);
+        // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
+        // http://stackoverflow.com/questions/24119684
+        self._scratchBuffer = self.ctx.createBuffer(1, 1, 22050);
+      }
 
       // Call this method on touch start to create and play a buffer,
       // then check if the audio actually played to determine if
@@ -379,27 +383,7 @@
         // Fix Android can not play in suspend state.
         self._autoResume();
 
-        // Create an empty buffer.
-        var source = self.ctx.createBufferSource();
-        source.buffer = self._scratchBuffer;
-        source.connect(self.ctx.destination);
-
-        // Play the empty buffer.
-        if (typeof source.start === 'undefined') {
-          source.noteOn(0);
-        } else {
-          source.start(0);
-        }
-
-        // Calling resume() on a stack initiated by user gesture is what actually unlocks the audio on Android Chrome >= 55.
-        if (typeof self.ctx.resume === 'function') {
-          self.ctx.resume();
-        }
-
-        // Setup a timeout to check that we are unlocked on the next event loop.
-        source.onended = function() {
-          source.disconnect(0);
-
+        function onUnlockFinish() {
           // Update the unlocked state and prevent this check from happening again.
           self._audioUnlocked = true;
           self.safeToPlay = true;
@@ -415,7 +399,7 @@
           for (var i=0; i<self._howls.length; i++) {
             self._howls[i]._emit('unlock');
           }
-        };
+        }
 
         if (self.ctx) {
           // Create an empty buffer.
@@ -669,7 +653,7 @@
       self._webAudio = Howler.usingWebAudio && !self._html5;
 
       // Automatically try to enable audio.
-      if (typeof Howler.ctx !== 'undefined' && Howler.ctx && Howler.autoUnlock) {
+      if (Howler.autoUnlock) { // JE: Unlock even if not using WebAudio
         Howler._unlockAudio();
       }
 
