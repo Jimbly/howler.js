@@ -4,7 +4,7 @@
  *
  *  (c) 2013-2019, James Simpson of GoldFire Studios
  *  goldfirestudios.com
- *  
+ *
  *  Modified by Jimb Esser, Dashing Strike LLC:
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
