@@ -13,6 +13,7 @@
  *    Unlock audio even if WebAudio is disabled
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
+ *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
  *
  *  MIT License
  */
@@ -857,6 +858,8 @@
       var seek = Math.max(0, sound._seek > 0 ? sound._seek : self._sprite[sprite][0] / 1000);
       var duration = Math.max(0, ((self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000) - seek);
       var timeout = (duration * 1000) / Math.abs(sound._rate);
+      // JE: With short timeouts, we get clipped on no sound at all on Android
+      timeout += 500;
       var start = self._sprite[sprite][0] / 1000;
       var stop = (self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000;
       sound._sprite = sprite;
