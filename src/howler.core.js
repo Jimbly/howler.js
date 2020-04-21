@@ -12,6 +12,7 @@
  *    Fix pre-loading entire audio file when streaming is desired
  *    Unlock audio even if WebAudio is disabled
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
+ *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *
  *  MIT License
  */
@@ -762,10 +763,11 @@
     /**
      * Play a sound or resume previous playback.
      * @param  {String/Number} sprite   Sprite name for sprite playback or sound id to continue previous.
+     * @param  {Number} volume
      * @param  {Boolean} internal Internal Use: true prevents event firing.
      * @return {Number}          Sound ID.
      */
-    play: function(sprite, internal) {
+    play: function(sprite, volume, internal) {
       var self = this;
       var id = null;
 
@@ -876,6 +878,8 @@
         return null;
       }
 
+      var sound_volume = typeof volume === 'number' ? volume : sound._volume;
+
       // Begin the actual playback.
       var node = sound._node;
       if (self._webAudio) {
@@ -886,7 +890,7 @@
           self._refreshBuffer(sound);
 
           // Setup the playback params.
-          var vol = (sound._muted || self._muted) ? 0 : sound._volume;
+          var vol = (sound._muted || self._muted) ? 0 : sound_volume;
           node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
           sound._playStart = Howler.ctx.currentTime;
 
@@ -926,7 +930,7 @@
         var playHtml5 = function() {
           node.currentTime = seek;
           node.muted = sound._muted || self._muted || Howler._muted || node.muted;
-          node.volume = sound._volume * Howler.volume();
+          node.volume = sound_volume * Howler.volume();
           node.playbackRate = sound._rate;
 
           // Some browsers will throw an error if this is called without user interaction.
@@ -1684,7 +1688,7 @@
           var seekAndEmit = function() {
             // Restart the playback if the sound was playing.
             if (playing) {
-              self.play(id, true);
+              self.play(id, undefined, true);
             }
 
             self._emit('seek', id);
