@@ -12,6 +12,7 @@
  *    Fix pre-loading entire audio file when streaming is desired
  *    Unlock audio even if WebAudio is disabled
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
+ *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *
  *  MIT License
  */
@@ -764,10 +765,11 @@
     /**
      * Play a sound or resume previous playback.
      * @param  {String/Number} sprite   Sprite name for sprite playback or sound id to continue previous.
+     * @param  {Number} volume
      * @param  {Boolean} internal Internal Use: true prevents event firing.
      * @return {Number}          Sound ID.
      */
-    play: function(sprite, internal) {
+    play: function(sprite, volume, internal) {
       var self = this;
       var id = null;
 
@@ -876,6 +878,10 @@
       if (seek >= stop) {
         self._ended(sound);
         return null;
+      }
+
+      if (typeof volume === 'number') {
+        sound._volume = volume;
       }
 
       // Begin the actual playback.
@@ -1505,7 +1511,7 @@
               // If playing, restart playback to ensure looping updates.
               if (self.playing(ids[i])) {
                 self.pause(ids[i], true);
-                self.play(ids[i], true);
+                self.play(ids[i], undefined, true);
               }
             }
           }
@@ -1686,7 +1692,7 @@
           var seekAndEmit = function() {
             // Restart the playback if the sound was playing.
             if (playing) {
-              self.play(id, true);
+              self.play(id, undefined, true);
             }
 
             self._emit('seek', id);
