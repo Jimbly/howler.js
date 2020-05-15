@@ -15,8 +15,7 @@
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
- *    Fix creating unbounded number of Audio elements when `unlock` is called multiple times
- *    Fix calling createBufferSource() on every touch event if not unlocked
+ *    [PR'd] Fix creating unbounded number of Audio elements when `unlock` is called multiple times
  *
  *  MIT License
  */
