@@ -15,6 +15,8 @@
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
+ *    Fix creating unbounded number of Audio elements when `unlock` is called multiple times
+ *    Fix calling createBufferSource() on every touch event if not unlocked
  *
  *  MIT License
  */
@@ -344,7 +346,8 @@
         // to the WebAudio API which only needs a single activation.
         // This must occur before WebAudio setup or the source.onended
         // event will not fire.
-        for (var i=0; i<self.html5PoolSize; i++) {
+        // JE: Don't add more to the pool than desired
+        while (self._html5AudioPool.length < self.html5PoolSize) {
           try {
             var audioNode = new Audio();
 
@@ -356,6 +359,7 @@
             self._releaseHtml5Audio(audioNode);
           } catch (e) {
             self.noAudio = true;
+            break;
           }
         }
 
@@ -400,9 +404,12 @@
 
         if (self.ctx) {
           // Create an empty buffer.
-          var source = self.ctx.createBufferSource();
-          source.buffer = self._scratchBuffer;
-          source.connect(self.ctx.destination);
+          var source = self._unlockSourceBuffer;
+          if (!source) {
+            source = self._unlockSourceBuffer = self.ctx.createBufferSource();
+            source.buffer = self._scratchBuffer;
+            source.connect(self.ctx.destination);
+          }
 
           // Play the empty buffer.
           if (typeof source.start === 'undefined') {
@@ -419,6 +426,7 @@
           // Setup a timeout to check that we are unlocked on the next event loop.
           source.onended = function() {
             source.disconnect(0);
+            delete self._unlockSourceBuffer;
             onUnlockFinish();
           };
         } else {
