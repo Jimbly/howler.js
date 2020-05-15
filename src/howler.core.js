@@ -404,12 +404,9 @@
 
         if (self.ctx) {
           // Create an empty buffer.
-          var source = self._unlockSourceBuffer;
-          if (!source) {
-            source = self._unlockSourceBuffer = self.ctx.createBufferSource();
-            source.buffer = self._scratchBuffer;
-            source.connect(self.ctx.destination);
-          }
+          var source = self.ctx.createBufferSource();
+          source.buffer = self._scratchBuffer;
+          source.connect(self.ctx.destination);
 
           // Play the empty buffer.
           if (typeof source.start === 'undefined') {
@@ -426,7 +423,6 @@
           // Setup a timeout to check that we are unlocked on the next event loop.
           source.onended = function() {
             source.disconnect(0);
-            delete self._unlockSourceBuffer;
             onUnlockFinish();
           };
         } else {
