@@ -14,6 +14,7 @@
  *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
+ *    Fix crash with unloaded audio context on 'iPhone OS 13_7 Safari/604.1'
  *
  *  MIT License
  */
@@ -332,7 +333,9 @@
           self._mobileUnloaded = true;
           self.unload();
         }
+      }
 
+      if (self.ctx) {
         // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
         // http://stackoverflow.com/questions/24119684
         self._scratchBuffer = self.ctx.createBuffer(1, 1, 22050);
