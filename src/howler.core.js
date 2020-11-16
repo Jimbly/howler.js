@@ -329,7 +329,9 @@
           self._mobileUnloaded = true;
           self.unload();
         }
+      }
 
+      if (self.ctx) {
         // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
         // http://stackoverflow.com/questions/24119684
         self._scratchBuffer = self.ctx.createBuffer(1, 1, 22050);
