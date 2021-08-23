@@ -15,6 +15,7 @@
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
  *    Fix crash with unloaded audio context on 'iPhone OS 13_7 Safari/604.1'
+ *    Fix crash with null masterGain on 'FreeBSD Firefox/34'
  *
  *  MIT License
  */
@@ -2586,8 +2587,13 @@
     // Create and expose the master GainNode when using Web Audio (useful for plugins or advanced usage).
     if (Howler.usingWebAudio) {
       Howler.masterGain = (typeof Howler.ctx.createGain === 'undefined') ? Howler.ctx.createGainNode() : Howler.ctx.createGain();
-      Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : Howler._volume, Howler.ctx.currentTime);
-      Howler.masterGain.connect(Howler.ctx.destination);
+      if (!Howler.masterGain) {
+        // Happening on Firefox 34 for some users, unsure why, does not reproduce
+        Howler.usingWebAudio = false;
+      } else {
+        Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : Howler._volume, Howler.ctx.currentTime);
+        Howler.masterGain.connect(Howler.ctx.destination);
+      }
     }
 
     // Re-run the setup on Howler.
