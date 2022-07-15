@@ -16,6 +16,7 @@
  *    Add `volume` parameter to `play()` so you can play a sound a specific volume without popping
  *    Add extra delay before firing `end` event to prevent sounds from being stopped before they even start on Android
  *    [PR'd] Fix creating unbounded number of Audio elements when `unlock` is called multiple times
+ *    Add manualUnlock() function to trigger WebAudio resume upon non-event'd user input (e.g. gamepad)
  *
  *  MIT License
  */
@@ -303,6 +304,14 @@
       return self;
     },
 
+    manualUnlock: function() {
+      var self = this || Howler;
+
+      if (!self.noAudio && self.unlockFunction) {
+        self.unlockFunction();
+      }
+    },
+
     /**
      * Some browsers/devices will only allow audio to be played after a user interaction.
      * Attempt to automatically unlock audio on the first user interaction.
@@ -340,7 +349,7 @@
       // Call this method on touch start to create and play a buffer,
       // then check if the audio actually played to determine if
       // audio has now been unlocked on iOS, Android, etc.
-      var unlock = function(e) {
+      var unlock = self.unlockFunction = function(e) {
         // Create a pool of unlocked HTML5 Audio objects that can
         // be used for playing sounds without user interaction. HTML5
         // Audio objects must be individually unlocked, as opposed
@@ -389,6 +398,7 @@
           // Update the unlocked state and prevent this check from happening again.
           self._audioUnlocked = true;
           self.safeToPlay = true;
+          self.unlockFunction = null;
 
           // Remove the touch start listener.
           document.removeEventListener('touchstart', unlock, true);
