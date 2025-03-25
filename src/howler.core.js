@@ -17,6 +17,7 @@
  *    Fix crash with unloaded audio context on 'iPhone OS 13_7 Safari/604.1'
  *    Fix crash with null masterGain on 'FreeBSD Firefox/34'
  *    Add manualUnlock() function to trigger WebAudio resume upon non-event'd user input (e.g. gamepad)
+ *    Fix sounds queued before unlocking being stuck queued forever
  *
  *  MIT License
  */
@@ -969,9 +970,8 @@
                   node._unlocked = true;
                   if (!internal) {
                     self._emit('play', sound._id);
-                  } else {
-                    self._loadQueue();
                   }
+                  self._loadQueue(); // JE: old Howler did this if !internal, new Howler does it if internal, initial music doesn't play unless doing it on !internal
                 })
                 .catch(function() {
                   self._playLock = false;
@@ -986,6 +986,7 @@
               self._playLock = false;
               setParams();
               self._emit('play', sound._id);
+              self._loadQueue(); // JE: old Howler did this, new Howler does not, seems likely we need it, like above
             }
 
             // Setting rate before playing won't work in IE, so we set it again here.
