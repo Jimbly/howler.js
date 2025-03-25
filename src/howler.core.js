@@ -8,6 +8,7 @@
  *  Modified by Jimb Esser, Dashing Strike LLC:
  *    Fix inconsistent return of self.
  *    Do not throw uncaught promise rejections at startup
+ *    Fix audio not resuming upon mousedown
  *    Fix pre-loading entire audio file when streaming is desired
  *
  *  MIT License
@@ -401,6 +402,7 @@
           document.removeEventListener('touchstart', unlock, true);
           document.removeEventListener('touchend', unlock, true);
           document.removeEventListener('click', unlock, true);
+          document.removeEventListener('mousedown', unlock, true);
           document.removeEventListener('keydown', unlock, true);
 
           // Let all sounds know that audio has been unlocked.
@@ -414,6 +416,7 @@
       document.addEventListener('touchstart', unlock, true);
       document.addEventListener('touchend', unlock, true);
       document.addEventListener('click', unlock, true);
+      document.addEventListener('mousedown', unlock, true);
       document.addEventListener('keydown', unlock, true);
 
       return self;
