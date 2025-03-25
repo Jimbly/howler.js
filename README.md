@@ -1,3 +1,7 @@
+# @jimbly/howler fork
+
+This fork has bug fixes and additional features as specified in https://github.com/Jimbly/howler.js/blob/master/src/howler.core.js#L8 and https://github.com/Jimbly/howler.js/blob/master/src/plugins/howler.spatial.js#L10
+
 [![howler.js](https://s3.amazonaws.com/howler.js/howler-logo.png "howler.js")](https://howlerjs.com)
 
 # Description
