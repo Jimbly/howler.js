@@ -10,6 +10,7 @@
  *    Do not throw uncaught promise rejections at startup
  *    Fix audio not resuming upon mousedown
  *    Fix pre-loading entire audio file when streaming is desired
+ *    Expose `safeToPlay` so app doesn't queue up hundreds of sounds before we can play any
  *
  *  MIT License
  */
@@ -57,6 +58,7 @@
       self.usingWebAudio = true;
       self.autoSuspend = true;
       self.ctx = null;
+      self.safeToPlay = false;
 
       // Set to false to disable the auto audio unlocker.
       self.autoUnlock = true;
@@ -209,6 +211,9 @@
 
       // Keeps track of the suspend/resume state of the AudioContext.
       self.state = self.ctx ? self.ctx.state || 'suspended' : 'suspended';
+      if  (self.state === 'running') {
+        self.safeToPlay = true;
+      }
 
       // Automatically begin the 30-second suspend process
       self._autoSuspend();
@@ -397,6 +402,7 @@
 
           // Update the unlocked state and prevent this check from happening again.
           self._audioUnlocked = true;
+          self.safeToPlay = true;
 
           // Remove the touch start listener.
           document.removeEventListener('touchstart', unlock, true);
