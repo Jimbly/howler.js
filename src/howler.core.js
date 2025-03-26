@@ -18,6 +18,7 @@
  *    Fix crash with null masterGain on 'FreeBSD Firefox/34'
  *    Add manualUnlock() function to trigger WebAudio resume upon non-event'd user input (e.g. gamepad)
  *    Fix sounds queued before unlocking being stuck queued forever
+ *    Allow plugin parameters in play() to be applied _before_ the sound starts playing
  *
  *  MIT License
  */
@@ -781,11 +782,11 @@
     /**
      * Play a sound or resume previous playback.
      * @param  {String/Number} sprite   Sprite name for sprite playback or sound id to continue previous.
-     * @param  {Number} volume
+     * @param  {Object} opts: { volume, plugin parameters }
      * @param  {Boolean} internal Internal Use: true prevents event firing.
      * @return {Number}          Sound ID.
      */
-    play: function(sprite, volume, internal) {
+    play: function(sprite, opts, internal) {
       var self = this;
       var id = null;
 
@@ -898,8 +899,8 @@
         return null;
       }
 
-      if (typeof volume === 'number') {
-        sound._volume = volume;
+      if (opts && typeof opts.volume === 'number') {
+        sound._volume = opts.volume;
       }
 
       // Begin the actual playback.
@@ -907,6 +908,10 @@
       if (self._webAudio) {
         // Fire this when the sound is ready to play to begin Web Audio playback.
         var playWebAudio = function() {
+          // Allow plugins to respond to parameters
+          sound._paused = true; // prevents spatial from doing wrong stuff
+          self._prePlayWebAudio(sound, opts);
+
           self._playLock = false;
           setParams();
           self._refreshBuffer(sound);
@@ -2245,7 +2250,11 @@
       if (!checkIE) {
         node.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
       }
-    }
+    },
+
+    _prePlayWebAudio: function(sound, opts) {
+      // Allow overrides by plugins
+    },
   };
 
   /** Single Sound Methods **/
