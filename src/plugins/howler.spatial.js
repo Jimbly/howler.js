@@ -9,6 +9,7 @@
  *
  *  Modified by Jimb Esser:
  *    Fix setting stereo() on one sound changing the panningModel for all future sounds
+ *    Fix leaving connected panners when changing spatial/stereo settings
  *
  *  MIT License
  */
@@ -630,6 +631,11 @@
    */
   var setupPanner = function(sound, type) {
     type = type || 'spatial';
+
+    if (sound._panner) {
+      sound._panner.disconnect(0);
+      sound._panner = undefined;
+    }
 
     // Create the new panner node.
     if (type === 'spatial') {
