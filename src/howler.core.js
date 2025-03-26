@@ -434,6 +434,8 @@
           // Calling resume() on a stack initiated by user gesture is what actually unlocks the audio on Android Chrome >= 55.
           if (typeof self.ctx.resume === 'function') {
             self.ctx.resume();
+            // Assume unlocked at this point
+            self.safeToPlay = true;
           }
 
           // Setup a timeout to check that we are unlocked on the next event loop.
