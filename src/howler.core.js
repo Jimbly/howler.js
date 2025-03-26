@@ -896,7 +896,9 @@
         return null;
       }
 
-      var sound_volume = typeof volume === 'number' ? volume : sound._volume;
+      if (typeof volume === 'number') {
+        sound._volume = volume;
+      }
 
       // Begin the actual playback.
       var node = sound._node;
@@ -908,7 +910,7 @@
           self._refreshBuffer(sound);
 
           // Setup the playback params.
-          var vol = (sound._muted || self._muted) ? 0 : sound_volume;
+          var vol = (sound._muted || self._muted) ? 0 : sound._volume;
           node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
           sound._playStart = Howler.ctx.currentTime;
 
@@ -948,7 +950,7 @@
         var playHtml5 = function() {
           node.currentTime = seek;
           node.muted = sound._muted || self._muted || Howler._muted || node.muted;
-          node.volume = sound_volume * Howler.volume();
+          node.volume = sound._volume * Howler.volume();
           node.playbackRate = sound._rate;
 
           // Some browsers will throw an error if this is called without user interaction.
@@ -1525,7 +1527,7 @@
               // If playing, restart playback to ensure looping updates.
               if (self.playing(ids[i])) {
                 self.pause(ids[i], true);
-                self.play(ids[i], true);
+                self.play(ids[i], undefined, true);
               }
             }
           }
