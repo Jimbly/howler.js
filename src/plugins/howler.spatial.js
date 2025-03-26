@@ -10,6 +10,7 @@
  *  Modified by Jimb Esser:
  *    Fix setting stereo() on one sound changing the panningModel for all future sounds
  *    Fix leaving connected panners when changing spatial/stereo settings
+ *    Apply stereo/pos/orientation parameters to play() before playing to reduce popping between playing a sound and settings its position
  *
  *  MIT License
  */
@@ -170,6 +171,25 @@
       return _super.call(this, o);
     };
   })(Howl.prototype.init);
+
+  Howl.prototype._prePlayWebAudio = (function(_super) {
+    return function(sound, o) {
+      var self = this;
+
+      _super.call(this, sound, o);
+
+      // Setup spatial parameters _before_ starting the sound playing
+      o = o || {};
+      if (o.stereo !== undefined) {
+        self.stereo(o.stereo, sound._id);
+      } else if (o.pos !== undefined) {
+        self.pos(o.pos[0], o.pos[1], o.pos[2], sound._id);
+        if (o.orientation !== undefined) {
+          self.orientation(o.orientation[0], o.orientation[1], o.orientation[2], sound._id);
+        }
+      }
+    };
+  })(Howl.prototype._prePlayWebAudio);
 
   /**
    * Get/set the stereo panning of the audio source for this sound or all in the group.
