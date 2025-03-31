@@ -11,6 +11,8 @@
  *    Fix setting stereo() on one sound changing the panningModel for all future sounds
  *    Fix leaving connected panners when changing spatial/stereo settings
  *    Apply stereo/pos/orientation parameters to play() before playing to reduce popping between playing a sound and settings its position
+ *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
+ *    Protect against ctx.currentTime being NaN and Infinity on iOS
  *
  *  MIT License
  */
@@ -72,9 +74,10 @@
       self._pos = [x, y, z];
 
       if (typeof self.ctx.listener.positionX !== 'undefined') {
-        self.ctx.listener.positionX.setTargetAtTime(self._pos[0], Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.positionY.setTargetAtTime(self._pos[1], Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], Howler.ctx.currentTime, 0.1);
+        var currentTime = Howler._currentTime();
+        self.ctx.listener.positionX.setTargetAtTime(self._pos[0], currentTime, 0.1);
+        self.ctx.listener.positionY.setTargetAtTime(self._pos[1], currentTime, 0.1);
+        self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], currentTime, 0.1);
       } else {
         self.ctx.listener.setPosition(self._pos[0], self._pos[1], self._pos[2]);
       }
@@ -119,12 +122,13 @@
       self._orientation = [x, y, z, xUp, yUp, zUp];
 
       if (typeof self.ctx.listener.forwardX !== 'undefined') {
-        self.ctx.listener.forwardX.setTargetAtTime(x, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.forwardY.setTargetAtTime(y, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.forwardZ.setTargetAtTime(z, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upX.setTargetAtTime(xUp, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upY.setTargetAtTime(yUp, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upZ.setTargetAtTime(zUp, Howler.ctx.currentTime, 0.1);
+        var currentTime = Howler._currentTime();
+        self.ctx.listener.forwardX.setTargetAtTime(x, currentTime, 0.1);
+        self.ctx.listener.forwardY.setTargetAtTime(y, currentTime, 0.1);
+        self.ctx.listener.forwardZ.setTargetAtTime(z, currentTime, 0.1);
+        self.ctx.listener.upX.setTargetAtTime(xUp, currentTime, 0.1);
+        self.ctx.listener.upY.setTargetAtTime(yUp, currentTime, 0.1);
+        self.ctx.listener.upZ.setTargetAtTime(zUp, currentTime, 0.1);
       } else {
         self.ctx.listener.setOrientation(x, y, z, xUp, yUp, zUp);
       }
@@ -264,14 +268,14 @@
 
             if (pannerType === 'spatial') {
               if (typeof sound._panner.positionX !== 'undefined') {
-                sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
-                sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
-                sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
+                sound._panner.positionX.value = pan;
+                sound._panner.positionY.value = 0;
+                sound._panner.positionZ.value = 0;
               } else {
                 sound._panner.setPosition(pan, 0, 0);
               }
             } else {
-              sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
+              sound._panner.pan.value = pan;
             }
           }
 
@@ -344,9 +348,9 @@
             }
 
             if (typeof sound._panner.positionX !== 'undefined') {
-              sound._panner.positionX.setValueAtTime(x, Howler.ctx.currentTime);
-              sound._panner.positionY.setValueAtTime(y, Howler.ctx.currentTime);
-              sound._panner.positionZ.setValueAtTime(z, Howler.ctx.currentTime);
+              sound._panner.positionX.value = x;
+              sound._panner.positionY.value = y;
+              sound._panner.positionZ.value = z;
             } else {
               sound._panner.setPosition(x, y, z);
             }
@@ -428,9 +432,9 @@
             }
 
             if (typeof sound._panner.orientationX !== 'undefined') {
-              sound._panner.orientationX.setValueAtTime(x, Howler.ctx.currentTime);
-              sound._panner.orientationY.setValueAtTime(y, Howler.ctx.currentTime);
-              sound._panner.orientationZ.setValueAtTime(z, Howler.ctx.currentTime);
+              sound._panner.orientationX.value = x;
+              sound._panner.orientationY.value = y;
+              sound._panner.orientationZ.value = z;
             } else {
               sound._panner.setOrientation(x, y, z);
             }
@@ -670,23 +674,23 @@
       sound._panner.panningModel = sound._pannerAttr.panningModel;
 
       if (typeof sound._panner.positionX !== 'undefined') {
-        sound._panner.positionX.setValueAtTime(sound._pos[0], Howler.ctx.currentTime);
-        sound._panner.positionY.setValueAtTime(sound._pos[1], Howler.ctx.currentTime);
-        sound._panner.positionZ.setValueAtTime(sound._pos[2], Howler.ctx.currentTime);
+        sound._panner.positionX.value = sound._pos[0];
+        sound._panner.positionY.value = sound._pos[1];
+        sound._panner.positionZ.value = sound._pos[2];
       } else {
         sound._panner.setPosition(sound._pos[0], sound._pos[1], sound._pos[2]);
       }
 
       if (typeof sound._panner.orientationX !== 'undefined') {
-        sound._panner.orientationX.setValueAtTime(sound._orientation[0], Howler.ctx.currentTime);
-        sound._panner.orientationY.setValueAtTime(sound._orientation[1], Howler.ctx.currentTime);
-        sound._panner.orientationZ.setValueAtTime(sound._orientation[2], Howler.ctx.currentTime);
+        sound._panner.orientationX.value = sound._orientation[0];
+        sound._panner.orientationY.value = sound._orientation[1];
+        sound._panner.orientationZ.value = sound._orientation[2];
       } else {
         sound._panner.setOrientation(sound._orientation[0], sound._orientation[1], sound._orientation[2]);
       }
     } else {
       sound._panner = Howler.ctx.createStereoPanner();
-      sound._panner.pan.setValueAtTime(sound._stereo, Howler.ctx.currentTime);
+      sound._panner.pan.value = sound._stereo;
     }
 
     sound._panner.connect(sound._node);
