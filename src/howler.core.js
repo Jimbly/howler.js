@@ -19,6 +19,7 @@
  *    Add manualUnlock() function to trigger WebAudio resume upon non-event'd user input (e.g. gamepad)
  *    Fix sounds queued before unlocking being stuck queued forever
  *    Allow plugin parameters in play() to be applied _before_ the sound starts playing
+ *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
  *
  *  MIT License
  */
@@ -101,7 +102,7 @@
 
         // When using Web Audio, we just need to adjust the master gain.
         if (self.usingWebAudio) {
-          self.masterGain.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+          self.masterGain.gain.value = vol;
         }
 
         // Loop through and change volume for all HTML5 audio nodes.
@@ -143,7 +144,7 @@
 
       // With Web Audio, we just need to mute the master gain.
       if (self.usingWebAudio) {
-        self.masterGain.gain.setValueAtTime(muted ? 0 : self._volume, Howler.ctx.currentTime);
+        self.masterGain.gain.value = muted ? 0 : self._volume;
       }
 
       // Loop through and mute all HTML5 Audio nodes.
@@ -918,7 +919,7 @@
 
           // Setup the playback params.
           var vol = (sound._muted || self._muted) ? 0 : sound._volume;
-          node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+          node.gain.value = vol;
           sound._playStart = Howler.ctx.currentTime;
 
           // Play the sound using the supported method.
@@ -1248,7 +1249,7 @@
           }
 
           if (self._webAudio && sound._node) {
-            sound._node.gain.setValueAtTime(muted ? 0 : sound._volume, Howler.ctx.currentTime);
+            sound._node.gain.value = muted ? 0 : sound._volume;
           } else if (sound._node) {
             sound._node.muted = Howler._muted ? true : muted;
           }
@@ -1326,7 +1327,7 @@
             }
 
             if (self._webAudio && sound._node && !sound._muted) {
-              sound._node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
+              sound._node.gain.value = vol;
             } else if (sound._node && !sound._muted) {
               sound._node.volume = vol * Howler.volume();
             }
@@ -1388,7 +1389,7 @@
 
           // If we are using Web Audio, let the native methods do the actual fade.
           if (self._webAudio && !sound._muted) {
-            var currentTime = Howler.ctx.currentTime;
+            var currentTime = Howler.ctx.currentTime || 0;
             var end = currentTime + (len / 1000);
             sound._volume = from;
             sound._node.gain.setValueAtTime(from, currentTime);
@@ -1612,7 +1613,7 @@
 
             // Change the playback rate.
             if (self._webAudio && sound._node && sound._node.bufferSource) {
-              sound._node.bufferSource.playbackRate.setValueAtTime(rate, Howler.ctx.currentTime);
+              sound._node.bufferSource.playbackRate.value = rate;
             } else if (sound._node) {
               sound._node.playbackRate = rate;
             }
@@ -2211,7 +2212,7 @@
         sound._node.bufferSource.loopStart = sound._start || 0;
         sound._node.bufferSource.loopEnd = sound._stop || 0;
       }
-      sound._node.bufferSource.playbackRate.setValueAtTime(sound._rate, Howler.ctx.currentTime);
+      sound._node.bufferSource.playbackRate.value = sound._rate;
 
       return self;
     },
@@ -2311,7 +2312,7 @@
       if (parent._webAudio) {
         // Create the gain node for controlling volume (the source will connect to this).
         self._node = (typeof Howler.ctx.createGain === 'undefined') ? Howler.ctx.createGainNode() : Howler.ctx.createGain();
-        self._node.gain.setValueAtTime(volume, Howler.ctx.currentTime);
+        self._node.gain.value = volume;
         self._node.paused = true;
         self._node.connect(Howler.masterGain);
       } else if (!Howler.noAudio) {
@@ -2615,7 +2616,7 @@
         // Happening on Firefox 34 for some users, unsure why, does not reproduce
         Howler.usingWebAudio = false;
       } else {
-        Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : Howler._volume, Howler.ctx.currentTime);
+        Howler.masterGain.gain.value = Howler._muted ? 0 : Howler._volume;
         Howler.masterGain.connect(Howler.ctx.destination);
       }
     }

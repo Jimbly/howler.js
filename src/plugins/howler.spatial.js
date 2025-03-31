@@ -11,6 +11,7 @@
  *    Fix setting stereo() on one sound changing the panningModel for all future sounds
  *    Fix leaving connected panners when changing spatial/stereo settings
  *    Apply stereo/pos/orientation parameters to play() before playing to reduce popping between playing a sound and settings its position
+ *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
  *
  *  MIT License
  */
@@ -264,14 +265,14 @@
 
             if (pannerType === 'spatial') {
               if (typeof sound._panner.positionX !== 'undefined') {
-                sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
-                sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
-                sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
+                sound._panner.positionX.value = pan;
+                sound._panner.positionY.value = 0;
+                sound._panner.positionZ.value = 0;
               } else {
                 sound._panner.setPosition(pan, 0, 0);
               }
             } else {
-              sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
+              sound._panner.pan.value = pan;
             }
           }
 
@@ -344,9 +345,9 @@
             }
 
             if (typeof sound._panner.positionX !== 'undefined') {
-              sound._panner.positionX.setValueAtTime(x, Howler.ctx.currentTime);
-              sound._panner.positionY.setValueAtTime(y, Howler.ctx.currentTime);
-              sound._panner.positionZ.setValueAtTime(z, Howler.ctx.currentTime);
+              sound._panner.positionX.value = x;
+              sound._panner.positionY.value = y;
+              sound._panner.positionZ.value = z;
             } else {
               sound._panner.setPosition(x, y, z);
             }
@@ -428,9 +429,9 @@
             }
 
             if (typeof sound._panner.orientationX !== 'undefined') {
-              sound._panner.orientationX.setValueAtTime(x, Howler.ctx.currentTime);
-              sound._panner.orientationY.setValueAtTime(y, Howler.ctx.currentTime);
-              sound._panner.orientationZ.setValueAtTime(z, Howler.ctx.currentTime);
+              sound._panner.orientationX.value = x;
+              sound._panner.orientationY.value = y;
+              sound._panner.orientationZ.value = z;
             } else {
               sound._panner.setOrientation(x, y, z);
             }
@@ -670,23 +671,23 @@
       sound._panner.panningModel = sound._pannerAttr.panningModel;
 
       if (typeof sound._panner.positionX !== 'undefined') {
-        sound._panner.positionX.setValueAtTime(sound._pos[0], Howler.ctx.currentTime);
-        sound._panner.positionY.setValueAtTime(sound._pos[1], Howler.ctx.currentTime);
-        sound._panner.positionZ.setValueAtTime(sound._pos[2], Howler.ctx.currentTime);
+        sound._panner.positionX.value = sound._pos[0];
+        sound._panner.positionY.value = sound._pos[1];
+        sound._panner.positionZ.value = sound._pos[2];
       } else {
         sound._panner.setPosition(sound._pos[0], sound._pos[1], sound._pos[2]);
       }
 
       if (typeof sound._panner.orientationX !== 'undefined') {
-        sound._panner.orientationX.setValueAtTime(sound._orientation[0], Howler.ctx.currentTime);
-        sound._panner.orientationY.setValueAtTime(sound._orientation[1], Howler.ctx.currentTime);
-        sound._panner.orientationZ.setValueAtTime(sound._orientation[2], Howler.ctx.currentTime);
+        sound._panner.orientationX.value = sound._orientation[0];
+        sound._panner.orientationY.value = sound._orientation[1];
+        sound._panner.orientationZ.value = sound._orientation[2];
       } else {
         sound._panner.setOrientation(sound._orientation[0], sound._orientation[1], sound._orientation[2]);
       }
     } else {
       sound._panner = Howler.ctx.createStereoPanner();
-      sound._panner.pan.setValueAtTime(sound._stereo, Howler.ctx.currentTime);
+      sound._panner.pan.value = sound._stereo;
     }
 
     sound._panner.connect(sound._node);
