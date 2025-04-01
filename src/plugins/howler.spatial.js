@@ -12,6 +12,7 @@
  *    Fix leaving connected panners when changing spatial/stereo settings
  *    Apply stereo/pos/orientation parameters to play() before playing to reduce popping between playing a sound and settings its position
  *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
+ *    Protect against ctx.currentTime being NaN on iOS
  *
  *  MIT License
  */
@@ -73,9 +74,10 @@
       self._pos = [x, y, z];
 
       if (typeof self.ctx.listener.positionX !== 'undefined') {
-        self.ctx.listener.positionX.setTargetAtTime(self._pos[0], Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.positionY.setTargetAtTime(self._pos[1], Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], Howler.ctx.currentTime, 0.1);
+        var currentTime = Howler.ctx.currentTime || 0;
+        self.ctx.listener.positionX.setTargetAtTime(self._pos[0], currentTime, 0.1);
+        self.ctx.listener.positionY.setTargetAtTime(self._pos[1], currentTime, 0.1);
+        self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], currentTime, 0.1);
       } else {
         self.ctx.listener.setPosition(self._pos[0], self._pos[1], self._pos[2]);
       }
@@ -120,12 +122,13 @@
       self._orientation = [x, y, z, xUp, yUp, zUp];
 
       if (typeof self.ctx.listener.forwardX !== 'undefined') {
-        self.ctx.listener.forwardX.setTargetAtTime(x, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.forwardY.setTargetAtTime(y, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.forwardZ.setTargetAtTime(z, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upX.setTargetAtTime(xUp, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upY.setTargetAtTime(yUp, Howler.ctx.currentTime, 0.1);
-        self.ctx.listener.upZ.setTargetAtTime(zUp, Howler.ctx.currentTime, 0.1);
+        var currentTime = Howler.ctx.currentTime || 0;
+        self.ctx.listener.forwardX.setTargetAtTime(x, currentTime, 0.1);
+        self.ctx.listener.forwardY.setTargetAtTime(y, currentTime, 0.1);
+        self.ctx.listener.forwardZ.setTargetAtTime(z, currentTime, 0.1);
+        self.ctx.listener.upX.setTargetAtTime(xUp, currentTime, 0.1);
+        self.ctx.listener.upY.setTargetAtTime(yUp, currentTime, 0.1);
+        self.ctx.listener.upZ.setTargetAtTime(zUp, currentTime, 0.1);
       } else {
         self.ctx.listener.setOrientation(x, y, z, xUp, yUp, zUp);
       }
