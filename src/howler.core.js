@@ -20,7 +20,7 @@
  *    Fix sounds queued before unlocking being stuck queued forever
  *    Allow plugin parameters in play() to be applied _before_ the sound starts playing
  *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
- *    Protect against ctx.currentTime being NaN on iOS
+ *    Protect against ctx.currentTime being NaN and Infinity on iOS
  *
  *  MIT License
  */
@@ -589,7 +589,13 @@
       }
 
       return self;
-    }
+    },
+
+    _currentTime: function () {
+      var self = this;
+      var currentTime = self.ctx.currentTime;
+      return isFinite(currentTime) ? currentTime : 0;
+    },
   };
 
   // Setup the global audio controller.
@@ -921,7 +927,7 @@
           // Setup the playback params.
           var vol = (sound._muted || self._muted) ? 0 : sound._volume;
           node.gain.value = vol;
-          sound._playStart = Howler.ctx.currentTime || 0;
+          sound._playStart = Howler._currentTime();
 
           // Play the sound using the supported method.
           if (typeof node.bufferSource.start === 'undefined') {
@@ -1390,7 +1396,7 @@
 
           // If we are using Web Audio, let the native methods do the actual fade.
           if (self._webAudio && !sound._muted) {
-            var currentTime = Howler.ctx.currentTime || 0;
+            var currentTime = Howler._currentTime();
             var end = currentTime + (len / 1000);
             sound._volume = from;
             sound._node.gain.setValueAtTime(from, currentTime);
@@ -1476,7 +1482,7 @@
 
       if (sound && sound._interval) {
         if (self._webAudio) {
-          sound._node.gain.cancelScheduledValues(Howler.ctx.currentTime || 0);
+          sound._node.gain.cancelScheduledValues(Howler._currentTime());
         }
 
         clearInterval(sound._interval);
@@ -1608,7 +1614,7 @@
             // start position so we can properly adjust the seek position for time elapsed.
             if (self.playing(id[i])) {
               sound._rateSeek = self.seek(id[i]);
-              sound._playStart = self._webAudio ? Howler.ctx.currentTime || 0 : sound._playStart;
+              sound._playStart = self._webAudio ? Howler._currentTime() : sound._playStart;
             }
             sound._rate = rate;
 
@@ -1738,7 +1744,7 @@
           }
         } else {
           if (self._webAudio) {
-            var realTime = self.playing(id) ? Howler.ctx.currentTime || 0 - sound._playStart : 0;
+            var realTime = self.playing(id) ? Howler._currentTime() - sound._playStart : 0;
             var rateSeek = sound._rateSeek ? sound._rateSeek - sound._seek : 0;
             return sound._seek + (rateSeek + realTime * Math.abs(sound._rate));
           } else {
@@ -2036,7 +2042,7 @@
         self._emit('play', sound._id);
         sound._seek = sound._start || 0;
         sound._rateSeek = 0;
-        sound._playStart = Howler.ctx.currentTime || 0;
+        sound._playStart = Howler._currentTime();
 
         var timeout = ((sound._stop - sound._start) * 1000) / Math.abs(sound._rate);
         self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);

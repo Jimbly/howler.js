@@ -12,7 +12,7 @@
  *    Fix leaving connected panners when changing spatial/stereo settings
  *    Apply stereo/pos/orientation parameters to play() before playing to reduce popping between playing a sound and settings its position
  *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
- *    Protect against ctx.currentTime being NaN on iOS
+ *    Protect against ctx.currentTime being NaN and Infinity on iOS
  *
  *  MIT License
  */
@@ -74,7 +74,7 @@
       self._pos = [x, y, z];
 
       if (typeof self.ctx.listener.positionX !== 'undefined') {
-        var currentTime = Howler.ctx.currentTime || 0;
+        var currentTime = Howler._currentTime();
         self.ctx.listener.positionX.setTargetAtTime(self._pos[0], currentTime, 0.1);
         self.ctx.listener.positionY.setTargetAtTime(self._pos[1], currentTime, 0.1);
         self.ctx.listener.positionZ.setTargetAtTime(self._pos[2], currentTime, 0.1);
@@ -122,7 +122,7 @@
       self._orientation = [x, y, z, xUp, yUp, zUp];
 
       if (typeof self.ctx.listener.forwardX !== 'undefined') {
-        var currentTime = Howler.ctx.currentTime || 0;
+        var currentTime = Howler._currentTime();
         self.ctx.listener.forwardX.setTargetAtTime(x, currentTime, 0.1);
         self.ctx.listener.forwardY.setTargetAtTime(y, currentTime, 0.1);
         self.ctx.listener.forwardZ.setTargetAtTime(z, currentTime, 0.1);
