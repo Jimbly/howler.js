@@ -21,6 +21,7 @@
  *    Allow plugin parameters in play() to be applied _before_ the sound starts playing
  *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
  *    Protect against ctx.currentTime being NaN and Infinity on iOS
+ *    Protect against NotSupportedError on Opera
  *
  *  MIT License
  */
@@ -966,7 +967,11 @@
           node.currentTime = seek;
           node.muted = sound._muted || self._muted || Howler._muted || node.muted;
           node.volume = sound._volume * Howler.volume();
-          node.playbackRate = sound._rate;
+          try { // Opera throws NotSupportedError
+            node.playbackRate = sound._rate;
+          } catch (e) {
+            // best to just ignore, audio may just fail to play below
+          }
 
           // Some browsers will throw an error if this is called without user interaction.
           try {
