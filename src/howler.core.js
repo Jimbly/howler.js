@@ -22,6 +22,7 @@
  *    Prefer .value= instead of .setValueAtTime - fixes iOS crashes, prevents two changes in quick succession for ignoring the second one, fixes FireFox 100ms delays
  *    Protect against ctx.currentTime being NaN and Infinity on iOS
  *    Protect against NotSupportedError on Opera
+ *    Protect against "The document is not fully active" error on Firefox
  *
  *  MIT License
  */
@@ -579,6 +580,9 @@
           for (var i=0; i<self._howls.length; i++) {
             self._howls[i]._emit('resume');
           }
+        }, function() {
+          // rejected with "The document is not fully active." (Firefox) or similar
+          // Silently ignore
         });
 
         if (self._suspendTimer) {
