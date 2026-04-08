@@ -23,6 +23,7 @@
  *    Protect against ctx.currentTime being NaN and Infinity on iOS
  *    Protect against NotSupportedError on Opera
  *    Protect against "The document is not fully active" error on Firefox
+ *    Fix seeking a looping sound causing it to stop if the seek position is past the end
  *
  *  MIT License
  */
@@ -891,6 +892,7 @@
       timeout += 500;
       var start = self._sprite[sprite][0] / 1000;
       var stop = (self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000;
+      var loop = !!(sound._loop || self._sprite[sprite][2]);
       sound._sprite = sprite;
 
       // Mark the sound as ended instantly so that this async playback
@@ -903,13 +905,17 @@
         sound._seek = seek;
         sound._start = start;
         sound._stop = stop;
-        sound._loop = !!(sound._loop || self._sprite[sprite][2]);
+        sound._loop = loop;
       };
 
       // End the sound instantly if seek is at the end.
       if (seek >= stop) {
-        self._ended(sound);
-        return null;
+        if (loop) {
+          seek %= stop;
+        } else {
+          self._ended(sound);
+          return null;
+        }
       }
 
       if (opts && typeof opts.volume === 'number') {
