@@ -24,6 +24,7 @@
  *    Protect against NotSupportedError on Opera
  *    Protect against "The document is not fully active" error on Firefox
  *    Fix seeking a looping sound causing it to stop if the seek position is past the end
+ *    Add .ended() check so you can reliably check if a sound has not yet started vs finished playing
  *
  *  MIT License
  */
@@ -1790,6 +1791,23 @@
         if (!self._sounds[i]._paused) {
           return true;
         }
+      }
+
+      return false;
+    },
+
+    /**
+     * Check if a specific sound is has finished playing or not (if id is provided)
+     * @param  {Number}  id The sound id to check
+     * @return {Boolean} True if ended and false if not.
+     */
+    ended: function(id) {
+      var self = this;
+
+      // Check the passed sound ID (if any).
+      if (typeof id === 'number') {
+        var sound = self._soundById(id);
+        return sound ? sound._ended : false;
       }
 
       return false;
